@@ -87,55 +87,93 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
   @override
   void initState() {
     super.initState();
-    print("HI");
     _stopwatch.start();
     
   
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {}); // Updates the timer display
     });
-    print("Gettng location");
+
     _getLocation();
-    print("Got location");
+
   }
 
-
-Future<void> _getLocation() async {
+  Future<void> _getLocation() async {
   try {
     double latitude = 41.829528;
     double longitude = -71.401000;
 
-    final String key = dotenv.env['GOOGLE_API_KEY'] ?? ''; // Ensure the key is retrieved properly
-
-    final response = await http.get(Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$key'
-    ));
-
-
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);  // Use json.decode to parse the JSON
-      if (data['results'].isNotEmpty) {
-        String restaurantName = data['results'][0]['formatted_address'];
-        setState(() {
-          placemarkText = restaurantName;
-        });
-      } else {
-        setState(() {
-          placemarkText = "No placemark found.";
-        });
-      }
-    } else {
+    String? formattedAddress = await _reverseGeocode(latitude, longitude);
+    if (formattedAddress == null) {
       setState(() {
-        placemarkText = "Error fetching location.";
+        placemarkText = "No address found.";
       });
+      return;
     }
+    print(formattedAddress);
+
+    // Step 2: Use Find Place API to get restaurant name
+    String? placeName = await _findPlace(formattedAddress);
+    setState(() {
+      placemarkText = placeName ?? "No place found.";
+    });
+    
+    print(placeName);
+
   } catch (e) {
-    print("Error while fetching geocode: $e");
+    print("Error fetching location: $e");
     setState(() {
       placemarkText = "Error fetching location: $e";
     });
   }
 }
+
+// Function to reverse geocode (LatLng -> Address)
+Future<String?> _reverseGeocode(double lat, double lng) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final response = await http.get(Uri.parse(
+    'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
+  ));
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['results'].isNotEmpty) {
+      return data['results'][0]['formatted_address'];
+    }
+  }
+  return null;
+}
+
+// Function to find place (Address -> Place Name)
+Future<String?> _findPlace(String address) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+
+  String passing_string = "Restaurant within 10 feet of  " + address;
+  final response = await http.post(
+    Uri.parse('https://places.googleapis.com/v1/places:searchText'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'X-Goog-FieldMask' : 'places.displayName,places.formattedAddress,places.priceLevel',
+      'X-Goog-Api-Key' : key,
+    },
+    body: jsonEncode(<String, String>{
+      'textQuery' : passing_string,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['places'] != null && data['places'].isNotEmpty) {
+      String placeName = data['places'][0]['displayName']['text'];
+      print("Place Name: $placeName"); // Use setState if in a Flutter app
+      return placeName;
+    } else {
+      print("No place found.");
+    }
+  }
+  return null;
+}
+
 
 
   void endTimer() {
@@ -159,7 +197,6 @@ Future<void> _getLocation() async {
 
   @override
   Widget build(BuildContext context) {
-    print("Building wid");
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

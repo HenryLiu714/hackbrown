@@ -10,7 +10,7 @@ import 'dart:convert';
 
 void main() async {
   // Load env
-  await dotenv.load(fileName: "../.env");
+ //  await dotenv.load(fileName: "../.env");
 
   // Load mongodb
   print("Connecting to mongodb");
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const StartScreen(),
+      home: HomeScreen(),
     );
   }
 }
@@ -72,6 +72,44 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
+class HomeScreen extends StatelessWidget {
+  final _controller = PageController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        scrollDirection: Axis.vertical,
+        controller: _controller,
+        children: [
+          StartScreen(),
+          Screen1(),
+          Screen2()
+        ],
+      ),
+    );
+  }
+}
+
+class Screen1 extends StatelessWidget {
+  const Screen1({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepPurple,
+    );
+  }
+}
+
+class Screen2 extends StatelessWidget {
+  const Screen2({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepOrange,
+    );
+  }
+}
 
 // Start Screen 
 class StartScreen extends StatelessWidget {
@@ -195,8 +233,6 @@ Future<void> _getLocation() async {
   @override
   Widget build(BuildContext context) {
     print("Building wid");
-    var appState = context.watch<MyAppState>();
-    var user_name = appState.retrieveUser("user_id")["name"];
 
     return Scaffold(
       body: Column(
@@ -205,9 +241,6 @@ Future<void> _getLocation() async {
           const Text(
             "Score",
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "$user_name"
           ),
           const SizedBox(height: 20),
           Text(

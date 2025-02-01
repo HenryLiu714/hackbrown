@@ -3,6 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() async {
   // Load env
@@ -46,7 +50,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stopwatch App',
+      title: 'henry and eggs',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -100,18 +104,109 @@ class StopwatchScreen extends StatefulWidget {
 
 // Second Screen for StopWatch to show timer as well as end Button 
 class _StopwatchScreenState extends State<StopwatchScreen> {
+  // var appState = context.watch<MyAppState>;
+
   final Stopwatch _stopwatch = Stopwatch();
+  final LocationSettings locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 100,
+  );
+
   late Timer _timer;
   int elapsedTime = 0;
+  String placemarkText = "Fetching location....";
 
   @override
   void initState() {
     super.initState();
     _stopwatch.start();
+    
+  
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {}); // Updates the timer display
     });
+
+    _getLocation();
+
   }
+
+  Future<void> _getLocation() async {
+  try {
+    double latitude = 41.829528;
+    double longitude = -71.401000;
+
+    String? formattedAddress = await _reverseGeocode(latitude, longitude);
+    if (formattedAddress == null) {
+      setState(() {
+        placemarkText = "No address found.";
+      });
+      return;
+    }
+    print(formattedAddress);
+
+    // Step 2: Use Find Place API to get restaurant name
+    String? placeName = await _findPlace(formattedAddress);
+    setState(() {
+      placemarkText = placeName ?? "No place found.";
+    });
+    
+    print(placeName);
+
+  } catch (e) {
+    print("Error fetching location: $e");
+    setState(() {
+      placemarkText = "Error fetching location: $e";
+    });
+  }
+}
+
+// Function to reverse geocode (LatLng -> Address)
+Future<String?> _reverseGeocode(double lat, double lng) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final response = await http.get(Uri.parse(
+    'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
+  ));
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['results'].isNotEmpty) {
+      return data['results'][0]['formatted_address'];
+    }
+  }
+  return null;
+}
+
+// Function to find place (Address -> Place Name)
+Future<String?> _findPlace(String address) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+
+  String passing_string = "Restaurant within 10 feet of  " + address;
+  final response = await http.post(
+    Uri.parse('https://places.googleapis.com/v1/places:searchText'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'X-Goog-FieldMask' : 'places.displayName,places.formattedAddress,places.priceLevel',
+      'X-Goog-Api-Key' : key,
+    },
+    body: jsonEncode(<String, String>{
+      'textQuery' : passing_string,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['places'] != null && data['places'].isNotEmpty) {
+      String placeName = data['places'][0]['displayName']['text'];
+      print("Place Name: $placeName"); // Use setState if in a Flutter app
+      return placeName;
+    } else {
+      print("No place found.");
+    }
+  }
+  return null;
+}
+
+
 
   void endTimer() {
     _timer.cancel();
@@ -152,6 +247,11 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
           Text(
             "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
             style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            placemarkText, // Display location/restaurant name here
+            style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
           ),
           const SizedBox(height: 40),
           ElevatedButton(

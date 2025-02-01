@@ -3,6 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() async {
   // Load env
@@ -46,7 +50,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stopwatch App',
+      title: 'henry and eggs',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -57,6 +61,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
+  // global
+
+
   // stuff
   dynamic retrieveUser(userId) async {
     var collection = UserDB.inst.user_info;
@@ -100,18 +107,71 @@ class StopwatchScreen extends StatefulWidget {
 
 // Second Screen for StopWatch to show timer as well as end Button 
 class _StopwatchScreenState extends State<StopwatchScreen> {
+  // var appState = context.watch<MyAppState>;
+
   final Stopwatch _stopwatch = Stopwatch();
+  final LocationSettings locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 100,
+  );
+
   late Timer _timer;
   int elapsedTime = 0;
+  String placemarkText = "Fetching location....";
 
   @override
   void initState() {
     super.initState();
+    print("HI");
     _stopwatch.start();
+    
+  
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {}); // Updates the timer display
     });
+    print("Gettng location");
+    _getLocation();
+    print("Got location");
   }
+
+
+Future<void> _getLocation() async {
+  try {
+    double latitude = 41.829528;
+    double longitude = -71.401000;
+
+    final String key = dotenv.env['GOOGLE_API_KEY'] ?? ''; // Ensure the key is retrieved properly
+
+    final response = await http.get(Uri.parse(
+      'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$key'
+    ));
+
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);  // Use json.decode to parse the JSON
+      if (data['results'].isNotEmpty) {
+        String restaurantName = data['results'][0]['formatted_address'];
+        setState(() {
+          placemarkText = restaurantName;
+        });
+      } else {
+        setState(() {
+          placemarkText = "No placemark found.";
+        });
+      }
+    } else {
+      setState(() {
+        placemarkText = "Error fetching location.";
+      });
+    }
+  } catch (e) {
+    print("Error while fetching geocode: $e");
+    setState(() {
+      placemarkText = "Error fetching location: $e";
+    });
+  }
+}
+
 
   void endTimer() {
     _timer.cancel();
@@ -134,6 +194,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("Building wid");
     var appState = context.watch<MyAppState>();
     var user_name = appState.retrieveUser("user_id")["name"];
 
@@ -152,6 +213,11 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
           Text(
             "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
             style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            placemarkText, // Display location/restaurant name here
+            style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
           ),
           const SizedBox(height: 40),
           ElevatedButton(

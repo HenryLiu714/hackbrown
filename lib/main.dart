@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'dart:async';
 
-void main() {
+void main() async {
+  // Load env
+  await dotenv.load(fileName: "../.env");
+
   runApp(const MyApp());
 }
 
@@ -21,6 +26,10 @@ class MyApp extends StatelessWidget {
       home: const StartScreen(),
     );
   }
+}
+
+class MyAppState extends ChangeNotifier {
+  // stuff here
 }
 
 

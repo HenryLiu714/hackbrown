@@ -28,10 +28,15 @@ def get_items():
 
 @app.route("/items", methods=["POST"])
 def add_item():
+    user_id = request.args.get("user_id")
     data = request.json
     if not data:
         return jsonify({"error": "No data provided"}), 400
-    collection.insert_one(data)
+
+    print(data)
+    
+    collection.update_one({"user_id": user_id}, {"$push": {"restaurants": data}})
+    
     return jsonify({"message": "Item added successfully"}), 201
 
 if __name__ == "__main__":

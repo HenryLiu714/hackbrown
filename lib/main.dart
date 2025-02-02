@@ -621,34 +621,101 @@ Future<String?> _findPlace(String address) async {
   }
 
   @override
-  Widget build(BuildContext context) {
+
+ Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Score",
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
-            style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            placemarkText, // Display location/restaurant name here
-            style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
-          ),
-          const SizedBox(height: 40),
-          ElevatedButton(
-            onPressed: endTimer,
-            child: const Text("End"),
-          ),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // "Current level" with underline
+            Text(
+              "Current level",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Restaurant name
+            Text(
+              placemarkText,
+              style: const TextStyle(
+                fontSize: 20,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // "Score" label
+            const Text(
+              "Score",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Timer display
+            Text(
+              "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Image display
+            Image.asset(
+              '../images/ramen.gif', 
+              width: 100, 
+              height: 100,
+            ),
+            const SizedBox(height: 40),
+            // "End" button
+            ElevatedButton(
+              onPressed: endTimer,
+              child: const Text("End"),
+            ),
+          ],
+        ),
       ),
     );
-  }
+ }
+
+
+
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     body: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         const Text(
+  //           "Score",
+  //           style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+  //         ),
+  //         const SizedBox(height: 20),
+  //         Text(
+  //           "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
+  //           style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+  //         ),
+  //         const SizedBox(height: 20),
+  //         Text(
+  //           placemarkText, // Display location/restaurant name here
+  //           style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
+  //         ),
+  //         const SizedBox(height: 40),
+  //         ElevatedButton(
+  //           onPressed: endTimer,
+  //           child: const Text("End"),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+
+
 }
 
 

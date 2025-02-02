@@ -9,6 +9,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+
+
 import 'constants.dart';
 import 'dart:math';
 
@@ -157,7 +159,7 @@ class StartScreen extends StatefulWidget  {
 }
 
 class _StartScreenState extends State<StartScreen> with SingleTickerProviderStateMixin {
-   late AnimationController _controller;
+  late AnimationController _controller;
   late Animation<double> _widthAnimation;
   late Animation<double> _heightAnimation;
 

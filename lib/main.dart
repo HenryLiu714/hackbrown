@@ -102,9 +102,17 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
+  dynamic user = CurrentUser.inst.user;
+  final user_id = 1;
+  static final key1 = GlobalKey();
+
+  void updateUser() async {
+    user = await fetchUser(user_id);
+    notifyListeners();
+  }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatefulWidget{
   const HomeScreen({super.key});
 
   @override
@@ -159,13 +167,16 @@ class _HomeScreenState extends State<HomeScreen>{
 
 // Restaurant Wrapped!
 class Screen1 extends StatefulWidget {
-  const Screen1({super.key});
+  static final GlobalKey<Screen1State> globalKey = GlobalKey();
+
+  Screen1() : super(key: globalKey);
 
   @override
   State<Screen1> createState() => Screen1State(); 
 }
 
 class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
+  final appstate = MyAppState();
   late dynamic user;
   late List<dynamic> friends;
   late AnimationController _controller;
@@ -175,7 +186,7 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    user = CurrentUser.inst.user;
+    user = appstate.user;;
 
     _controller = AnimationController(
       vsync: this,
@@ -189,6 +200,11 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.repeat(reverse: true);
+  }
+
+  void updateState() {
+    setState(() {
+    });
   }
 
   Map<String, dynamic> topRestaurant() {
@@ -286,7 +302,9 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
 }
 
 class Screen2 extends StatefulWidget{
-  const Screen2({super.key});
+  static final GlobalKey<_Screen2State> globalKey = GlobalKey();
+
+  Screen2() : super(key: globalKey);
 
   @override
   State<Screen2> createState() => _Screen2State();
@@ -339,6 +357,11 @@ class _Screen2State extends State<Screen2> with SingleTickerProviderStateMixin{
     }
 
     getLeaderboard();    
+  }
+
+  void updateState() {
+    setState(() {
+    });
   }
 
   @override
@@ -462,7 +485,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+            MaterialPageRoute(builder: (context) => StopwatchScreen()),
           );
         },
         icon: Image.asset("assets/start.png"),
@@ -473,6 +496,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
           shadowColor: Colors.transparent,
           elevation: 0.0,
           hoverColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -487,7 +511,6 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
 }
 // State for Start State
 class StopwatchScreen extends StatefulWidget {
-  const StopwatchScreen({super.key});
 
   @override
   State<StopwatchScreen> createState() => _StopwatchScreenState();
@@ -497,7 +520,6 @@ class StopwatchScreen extends StatefulWidget {
 
 // Second Screen for StopWatch to show timer as well as end Button 
 class _StopwatchScreenState extends State<StopwatchScreen> {
-  // var appState = context.watch<MyAppState>;
 
   final Stopwatch _stopwatch = Stopwatch();
   final LocationSettings locationSettings = LocationSettings(
@@ -601,13 +623,30 @@ Future<String?> _findPlace(String address) async {
 
 
 
-  void endTimer() {
+  void endTimer() async {
     _timer.cancel();
     _stopwatch.stop();
     setState(() {
       elapsedTime = _stopwatch.elapsedMilliseconds;
     });
 
+    final userId = CurrentUser.inst.user['user_id'];
+    final String url = 'http://10.0.2.2:5000/items?user_id=$userId';
+
+    http.post(Uri.parse(url),
+    headers: <String, String>{
+      "Accept": "application/json",
+      "content-type":"application/json"
+    },
+    body: jsonEncode(<String, String>{
+      'name': placemarkText,
+      'time_visited': DateTime.now().subtract(Duration(milliseconds: elapsedTime)).toString(),
+      'time_left': DateTime.now().toString(),
+    }));
+
+    CurrentUser.inst.user = await fetchUser(userId);
+    Screen1.globalKey.currentState?.updateState();
+    Screen2.globalKey.currentState?.updateState();
     // TODO
     // Go to third page or store
     Navigator.pop(context, elapsedTime);
@@ -621,70 +660,7 @@ Future<String?> _findPlace(String address) async {
   }
 
   @override
-
-//  Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             // "Current level" with underline
-//             Text(
-//               "Current level",
-//               style: TextStyle(
-//                 fontSize: 30,
-//                 fontWeight: FontWeight.bold,
-//                 decoration: TextDecoration.underline,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             // Restaurant name
-//             Text(
-//               placemarkText,
-//               style: const TextStyle(
-//                 fontSize: 20,
-//                 fontStyle: FontStyle.italic,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             // "Score" label
-//             const Text(
-//               "Score",
-//               style: TextStyle(
-//                 fontSize: 30,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             // Timer display
-//             Text(
-//               "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
-//               style: const TextStyle(
-//                 fontSize: 40,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             // Image display
-//             Image.asset(
-//               'assets/ramen.gif', 
-//               width: 100, 
-//               height: 100,
-//             ),
-//             const SizedBox(height: 40),
-//             // "End" button
-//             ElevatedButton(
-//               onPressed: endTimer,
-//               child: const Text("End"),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//  }
-
-
- Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -699,8 +675,8 @@ Future<String?> _findPlace(String address) async {
           // Foreground Content
           Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
                 // "Current level" with underline
                 Text(
                   "Current level",
@@ -721,23 +697,22 @@ Future<String?> _findPlace(String address) async {
                 ),
                 const SizedBox(height: 20),
                 // "Score" label
-                const Text(
-                  "Score",
+          const Text(
+            "Score",
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-                const SizedBox(height: 20),
-                // Timer display
-                Text(
-                  "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "${_stopwatch.elapsed.inSeconds}.${(_stopwatch.elapsedMilliseconds % 1000) ~/ 100}",
                   style: const TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-                const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 20),
                 // "End" Button using Ramen GIF
                 GestureDetector(
                   onTap: endTimer,
@@ -768,7 +743,7 @@ class RecommendationScreen extends StatefulWidget {
 
 class _RecommendationScreenState extends State<RecommendationScreen> {
   List<String> restaurantList = [];
-  String recommendedRestaurant = 'Press the button to get a recommendation';
+  String recommendedRestaurant = 'Spin the wheel to get a recommendation!';
 
   Future<void> _getRecommendation() async {
       double latitude = 41.829528;
@@ -886,26 +861,22 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ),
           // Centered content
           Center(
-            child: ElevatedButton(
+            child: TextButton(
               onPressed: _getRecommendation,
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(Colors.pink),
-                padding: WidgetStateProperty.all(
-                  EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-                side: WidgetStateProperty.all(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                elevation: 0.0,
+                side: 
                   BorderSide(
                     color: Colors.white,
-                    width: 2,
-                  ),
-                ),
-                shape: WidgetStateProperty.all(
+                    width: 0,   ),
+                shape: 
                   RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.all(Radius.zero),
                   ),
-                ),
               ),
-              child: Text('Recommend'),
+              child: Text(''),
             ),
           ),
         ],

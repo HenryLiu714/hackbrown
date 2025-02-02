@@ -9,9 +9,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'constants.dart';
+import 'dart:math';
 
 void main() async {
   // Load env
+ //  await dotenv.load(fileName: "../.env");
   // await dotenv.load(fileName: "../.env");
 
   // Load mongodb
@@ -57,7 +59,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const StartScreen(),
+      home: HomeScreen(),
     );
   }
 }
@@ -71,6 +73,45 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
+class HomeScreen extends StatelessWidget {
+  final _controller = PageController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        scrollDirection: Axis.vertical,
+        controller: _controller,
+        children: [
+          StartScreen(),
+          RecommendationScreen(),
+          Screen1(),
+          Screen2()
+        ],
+      ),
+    );
+  }
+}
+
+class Screen1 extends StatelessWidget {
+  const Screen1({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepPurple,
+    );
+  }
+}
+
+class Screen2 extends StatelessWidget {
+  const Screen2({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepOrange,
+    );
+  }
+}
 
 // Start Screen 
 class StartScreen extends StatelessWidget {
@@ -80,18 +121,26 @@ class StartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     
     return Scaffold(
-      appBar: AppBar(title: const Text("Start Stopwatch")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StopwatchScreen()),
-            );
-          },
-          child: const Text("Start"),
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("../images/main_background.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child:Center(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+              );
+            },
+            child: const Text("Start"),
+          ),
         ),
       ),
+      
     );
   }
 }
@@ -144,7 +193,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       });
       return;
     }
-    print(formattedAddress);
+    // print(formattedAddress);
 
     // Step 2: Use Find Place API to get restaurant name
     String? placeName = await _findPlace(formattedAddress);
@@ -152,7 +201,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       placemarkText = placeName ?? "No place found.";
     });
     
-    print(placeName);
+    // print(placeName);
 
   } catch (e) {
     print("Error fetching location: $e");
@@ -255,6 +304,125 @@ Future<String?> _findPlace(String address) async {
             child: const Text("End"),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+class RecommendationScreen extends StatefulWidget {
+  const RecommendationScreen({Key? key}) : super(key: key);
+
+  @override
+  _RecommendationScreenState createState() => _RecommendationScreenState();
+}
+
+class _RecommendationScreenState extends State<RecommendationScreen> {
+  List<String> restaurantList = [];
+  String recommendedRestaurant = 'Press the button to get a recommendation';
+
+  Future<void> _getRecommendation() async {
+      double latitude = 41.829528;
+      double longitude = -71.401000;
+
+      String? formattedAddress = await _reverseGeocode(latitude, longitude);
+      if (formattedAddress == null) {
+        setState(() {
+          recommendedRestaurant = "No address found.";
+        });
+        return;
+      }
+      print("FORMAT RESTOOOOOO");
+      print(formattedAddress);
+
+      String? placeName = await _findPlace(formattedAddress);
+      setState(() {
+        recommendedRestaurant = placeName ?? "No place found.";
+      });
+  }
+
+  Future<String?> _reverseGeocode(double lat, double lng) async {
+  final String key = GOOGLE_API_KEY ?? '';
+  final response = await http.get(Uri.parse(
+    'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
+  ));
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['results'].isNotEmpty) {
+      return data['results'][0]['formatted_address'];
+    }
+  }
+  return null;
+}
+
+// Function to find place (Address -> Place Names)
+  Future<String?> _findPlace(String address) async {
+  final String key = GOOGLE_API_KEY ?? '';
+
+  String passing_string = "Restaurants within 10 miles of  " + address;
+  final response = await http.post(
+    Uri.parse('https://places.googleapis.com/v1/places:searchText'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'X-Goog-FieldMask' : 'places.displayName,places.formattedAddress,places.priceLevel',
+      'X-Goog-Api-Key' : key,
+    },
+    body: jsonEncode(<String, String>{
+      'textQuery' : passing_string,
+    }),
+  );
+
+   if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['places'] != null && data['places'].isNotEmpty) {
+      List<String> restaurantList = [];
+      for (var place in data['places']) {
+        restaurantList.add(place['displayName']['text']);
+      }
+
+      if (restaurantList.isNotEmpty) {
+        final randomIndex = Random().nextInt(restaurantList.length);
+        return restaurantList[randomIndex];
+      } else {
+        print('No restaurants available.');
+        return null;
+      }
+    } else {
+      print("No places found.");
+      return null;
+    }
+  } else {
+    print('Request failed with status: ${response.statusCode}.');
+    return null;
+  }
+  
+  return null;
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Restaurant Recommendation'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              recommendedRestaurant,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _getRecommendation,
+              child: const Text('Recommend'),
+            ),
+          ],
+        ),
       ),
     );
   }

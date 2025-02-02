@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -138,12 +139,39 @@ class Screen2 extends StatelessWidget {
 }
 
 // Start Screen 
-class StartScreen extends StatelessWidget {
+class StartScreen extends StatefulWidget  {
   const StartScreen({super.key});
 
   @override
+  State<StartScreen> createState() => _StartScreenState(); 
+
+  
+}
+
+class _StartScreenState extends State<StartScreen> with SingleTickerProviderStateMixin {
+   late AnimationController _controller;
+  late Animation<double> _widthAnimation;
+  late Animation<double> _heightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 2),
+      reverseDuration: Duration(seconds: 2),
+    );
+
+    _widthAnimation = Tween<double>(begin: 280, end: 300)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _heightAnimation = Tween<double>(begin: 140, end: 150)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _controller.repeat(reverse: true);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       body: DecoratedBox(
         decoration: BoxDecoration(
@@ -152,16 +180,37 @@ class StartScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child:Center(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+        child: Center(
+          child: AnimatedBuilder (
+            animation: _controller,
+            builder: (context, child) {
+              return SizedBox (
+                width: _widthAnimation.value,
+                height: _heightAnimation.value,
+                child: child,
               );
             },
-            child: const Text("Start"),
-          ),
+            child: IconButton (
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+                );
+              },
+              icon: Image.asset("../images/start.png"),
+              style: IconButton.styleFrom(
+                fixedSize: Size(300, 150),
+                padding: const EdgeInsets.all(0.0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shadowColor: Colors.transparent,
+                elevation: 0.0,
+                hoverColor: Colors.transparent,
+              ),
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              enableFeedback: false,
+              ),
+          )
         ),
       ),
       

@@ -39,7 +39,7 @@ void main() async {
 }
 
 dynamic fetchUser(userId) async {
-  final String url = 'http://127.0.0.1:5000/items?user_id=$userId';
+  final String url = 'http://10.0.2.2:5000/items?user_id=$userId';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen>{
   children: [
      Positioned.fill(
             child: Image.asset(
-              '../assets/main_background.png', // Replace with your image asset
+              'assets/main_background.png', // Replace with your image asset
               fit: BoxFit.cover,
             ),
           ),
@@ -246,7 +246,7 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
                       );
                     },
                   child: Image.asset(
-                    '../assets/star.png',
+                    'assets/star.png',
                     width: 100,
                     height: 100,
                   ),),
@@ -318,7 +318,7 @@ class _Screen2State extends State<Screen2> with SingleTickerProviderStateMixin{
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     _heightAnimation = Tween<double>(begin: 100, end: 105)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    _fontAnimation = Tween<double>(begin: 72, end: 72)
+    _fontAnimation = Tween<double>(begin: 56, end: 56)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.repeat(reverse: true);
@@ -465,7 +465,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
             MaterialPageRoute(builder: (context) => const StopwatchScreen()),
           );
         },
-        icon: Image.asset("../assets/start.png"),
+        icon: Image.asset("assets/start.png"),
         style: IconButton.styleFrom(
           fixedSize: Size(300, 150),
           padding: const EdgeInsets.all(0.0),
@@ -751,7 +751,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           // Display the GIF as the background
           Positioned.fill(
             child: Image.asset(
-              '../assets/spinner.gif', // Replace with your GIF path
+              'assets/spinner.gif', // Replace with your GIF path
               fit: BoxFit.cover,
             ),
           ),

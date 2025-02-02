@@ -73,25 +73,49 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  final _controller = PageController();
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>{
+  late PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(initialPage: 1);
+  }
+
+  final PageController _controller2 = PageController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView(
-        scrollDirection: Axis.vertical,
         controller: _controller,
+        scrollDirection: Axis.horizontal,
         children: [
-          StartScreen(),
           RecommendationScreen(),
-          Screen1(),
-          Screen2()
+          PageView(
+            controller: _controller2,
+            scrollDirection: Axis.vertical,
+            children: [
+              StartScreen(),
+              Screen1(),
+              Screen2(),
+            ],
+          ),
         ],
       ),
-    );
+      
+      
+      );
   }
 }
+
 
 class Screen1 extends StatelessWidget {
   const Screen1({super.key});
@@ -151,6 +175,7 @@ class StopwatchScreen extends StatefulWidget {
   @override
   State<StopwatchScreen> createState() => _StopwatchScreenState();
 }
+
 
 
 // Second Screen for StopWatch to show timer as well as end Button 

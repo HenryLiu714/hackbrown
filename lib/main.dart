@@ -480,43 +480,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
 
   @override
-// Widget build(BuildContext context) {
-//   return Scaffold(
-//     backgroundColor: Colors.transparent,
-//     body: Stack(
-//       fit: StackFit.expand,
-//       children: [
-//         // Display the GIF as the background
-//         Positioned.fill(
-//           child: Image.asset(
-//             '../images/spinner.gif', // Replace with your GIF path
-//             fit: BoxFit.cover,
-//           ),
-//         ),
-//         // Your existing content
-//         Center(
-//           child: Column(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: [
-//               Text(
-//                 recommendedRestaurant,
-//                 textAlign: TextAlign.center,
-//                 style: const TextStyle(fontSize: 20),
-//               ),
-//               const SizedBox(height: 20),
-//               ElevatedButton(
-//                 onPressed: _getRecommendation,
-//                 child: const Text('Recommend'),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     ),
-//   );
-// }
-
-
  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,

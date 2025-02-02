@@ -9,6 +9,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:core';
 
+
+
 import 'constants.dart';
 import 'dart:math';
 import 'dart:developer';
@@ -632,27 +634,73 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
 
   @override
-  Widget build(BuildContext context) {
+ Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, 
-      
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Display the GIF as the background
+          Positioned.fill(
+            child: Image.asset(
+              '../images/spinner.gif', // Replace with your GIF path
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Positioned text at the bottom
+          Positioned(
+            bottom: 50, // Adjust as needed
+            left: 0,
+            right: 0,
+            child: Text(
               recommendedRestaurant,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    offset: Offset(2.0, 2.0),
+                    blurRadius: 3.0,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          ),
+          // Centered content
+          Center(
+            child: ElevatedButton(
               onPressed: _getRecommendation,
-              child: const Text('Recommend'),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all(Colors.pink),
+                padding: WidgetStateProperty.all(
+                  EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+                textStyle: WidgetStateProperty.all(
+                  TextStyle(
+                    fontFamily: 'PressStart2P', // Replace with your game-style font
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                side: WidgetStateProperty.all(
+                  BorderSide(
+                    color: Colors.white,
+                    width: 2,
+                  ),
+                ),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              child: Text('Recommend'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-}
+  }}

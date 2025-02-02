@@ -628,8 +628,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     print('Request failed with status: ${response.statusCode}.');
     return null;
   }
-  
-  return null;
   }
 
 
@@ -643,7 +641,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           // Display the GIF as the background
           Positioned.fill(
             child: Image.asset(
-              '../images/spinner.gif', // Replace with your GIF path
+              '../assets/spinner.gif', // Replace with your GIF path
               fit: BoxFit.cover,
             ),
           ),
@@ -677,13 +675,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 backgroundColor: WidgetStateProperty.all(Colors.pink),
                 padding: WidgetStateProperty.all(
                   EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-                textStyle: WidgetStateProperty.all(
-                  TextStyle(
-                    fontFamily: 'PressStart2P', // Replace with your game-style font
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
                 ),
                 side: WidgetStateProperty.all(
                   BorderSide(

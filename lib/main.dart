@@ -74,25 +74,34 @@ class _HomeScreenState extends State<HomeScreen>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _controller,
-        scrollDirection: Axis.horizontal,
-        children: [
-          RecommendationScreen(),
-          PageView(
-            controller: _controller2,
-            scrollDirection: Axis.vertical,
-            children: [
-              StartScreen(),
-              Screen1(),
-              Screen2(),
-            ],
+      body: Stack(
+  children: [
+     Positioned.fill(
+            child: Image.asset(
+              '../images/main_background.png', // Replace with your image asset
+              fit: BoxFit.cover,
+            ),
           ),
-        ],
-      ),
-      
-      
-      );
+    PageView(
+      controller: _controller,
+      scrollDirection: Axis.horizontal,
+      children: [
+        RecommendationScreen(),
+        PageView(
+          controller: _controller2,
+          scrollDirection: Axis.vertical,
+          children: [
+            StartScreen(),
+            Screen1(),
+            Screen2(),
+          ],
+        ),
+      ],
+    ),
+  ],
+      )
+);
+
   }
 }
 
@@ -151,49 +160,43 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("../images/main_background.png"),
-            fit: BoxFit.cover,
-          ),
+   return Scaffold(
+    backgroundColor: Colors.transparent, 
+  body: Center(
+    child: AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return SizedBox(
+          width: _widthAnimation.value,
+          height: _heightAnimation.value,
+          child: child,
+        );
+      },
+      child: IconButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+          );
+        },
+        icon: Image.asset("../images/start.png"),
+        style: IconButton.styleFrom(
+          fixedSize: Size(300, 150),
+          padding: const EdgeInsets.all(0.0),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shadowColor: Colors.transparent,
+          elevation: 0.0,
+          hoverColor: Colors.transparent,
         ),
-        child: Center(
-          child: AnimatedBuilder (
-            animation: _controller,
-            builder: (context, child) {
-              return SizedBox (
-                width: _widthAnimation.value,
-                height: _heightAnimation.value,
-                child: child,
-              );
-            },
-            child: IconButton (
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const StopwatchScreen()),
-                );
-              },
-              icon: Image.asset("../images/start.png"),
-              style: IconButton.styleFrom(
-                fixedSize: Size(300, 150),
-                padding: const EdgeInsets.all(0.0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shadowColor: Colors.transparent,
-                elevation: 0.0,
-                hoverColor: Colors.transparent,
-              ),
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              enableFeedback: false,
-              ),
-          )
-        ),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        enableFeedback: false,
       ),
-      
-    );
+    ),
+  ),
+);
+
+   
   }
 }
 // State for Start State
@@ -457,9 +460,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Restaurant Recommendation'),
-      ),
+      backgroundColor: Colors.transparent, 
+      
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

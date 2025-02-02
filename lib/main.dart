@@ -84,6 +84,7 @@ class HomeScreen extends StatelessWidget {
         controller: _controller,
         children: [
           StartScreen(),
+          RecommendationScreen(),
           Screen1(),
           Screen2()
         ],
@@ -192,7 +193,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       });
       return;
     }
-    print(formattedAddress);
+    // print(formattedAddress);
 
     // Step 2: Use Find Place API to get restaurant name
     String? placeName = await _findPlace(formattedAddress);
@@ -200,7 +201,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       placemarkText = placeName ?? "No place found.";
     });
     
-    print(placeName);
+    // print(placeName);
 
   } catch (e) {
     print("Error fetching location: $e");
@@ -321,7 +322,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   String recommendedRestaurant = 'Press the button to get a recommendation';
 
   Future<void> _getRecommendation() async {
-    try {
       double latitude = 41.829528;
       double longitude = -71.401000;
 
@@ -332,25 +332,17 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
         });
         return;
       }
+      print("FORMAT RESTOOOOOO");
       print(formattedAddress);
 
       String? placeName = await _findPlace(formattedAddress);
       setState(() {
         recommendedRestaurant = placeName ?? "No place found.";
       });
-      
-      print(placeName);
-
-    } catch (e) {
-      print("Error fetching location: $e");
-      setState(() {
-        recommendedRestaurant = "Error fetching location: $e";
-      });
-    }
   }
 
   Future<String?> _reverseGeocode(double lat, double lng) async {
-  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final String key = GOOGLE_API_KEY ?? '';
   final response = await http.get(Uri.parse(
     'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
   ));
@@ -366,7 +358,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
 // Function to find place (Address -> Place Names)
   Future<String?> _findPlace(String address) async {
-  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final String key = GOOGLE_API_KEY ?? '';
 
   String passing_string = "Restaurants within 10 miles of  " + address;
   final response = await http.post(
@@ -380,28 +372,31 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       'textQuery' : passing_string,
     }),
   );
-  if (response.statusCode == 200) {
+
+   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     if (data['places'] != null && data['places'].isNotEmpty) {
+      List<String> restaurantList = [];
       for (var place in data['places']) {
         restaurantList.add(place['displayName']['text']);
       }
-    }
-    else {
-      print("No places found.");
-    }
-  }
 
-  if (restaurantList.isNotEmpty) {
-      final randomIndex = Random().nextInt(restaurantList.length);
-      setState(() {
-        recommendedRestaurant = restaurantList[randomIndex];
-      });
+      if (restaurantList.isNotEmpty) {
+        final randomIndex = Random().nextInt(restaurantList.length);
+        return restaurantList[randomIndex];
+      } else {
+        print('No restaurants available.');
+        return null;
+      }
     } else {
-      setState(() {
-        recommendedRestaurant = 'No restaurants available.';
-      });
+      print("No places found.");
+      return null;
     }
+  } else {
+    print('Request failed with status: ${response.statusCode}.');
+    return null;
+  }
+  
   return null;
   }
 

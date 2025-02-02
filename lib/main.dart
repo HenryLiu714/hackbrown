@@ -12,7 +12,26 @@ import 'constants.dart';
 import 'dart:math';
 import 'dart:developer';
 
+class CurrentUser {
+  static final int user_id = 1;
+  late Map<String, dynamic> user;
+  late List<Map<String, dynamic>> friends;
+
+  CurrentUser._();
+  static CurrentUser? _instance;
+  static CurrentUser get inst => _instance ??= CurrentUser._();
+  init() async {
+    user = await fetchUser(user_id);
+    friends = [];
+
+    for (var friendId in user['friends']) {
+      friends.add(await fetchUser(friendId));
+    }
+  }
+}
+
 void main() async {
+  await CurrentUser.inst.init();
   runApp(const MyApp());
 }
 
@@ -106,16 +125,47 @@ class _HomeScreenState extends State<HomeScreen>{
 }
 
 
-class Screen1 extends StatelessWidget {
+// Restaurant Wrapped!
+class Screen1 extends StatefulWidget {
   const Screen1({super.key});
+
+  @override
+  State<Screen1> createState() => Screen1State(); 
+}
+
+class Screen1State extends State<Screen1> {
+  late dynamic user;
+  late List<dynamic> friends;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = CurrentUser.inst.user;
+    final friends = CurrentUser.inst.friends;
+    print(user['name']);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple,
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome!',
+              style: const TextStyle(fontSize: 20),
+            )
+          ],
+        ),
+      ),
     );
   }
+
 }
 
+// Leaderboard!
 class Screen2 extends StatelessWidget {
   const Screen2({super.key});
   @override
@@ -137,7 +187,7 @@ class StartScreen extends StatefulWidget  {
 }
 
 class _StartScreenState extends State<StartScreen> with SingleTickerProviderStateMixin {
-   late AnimationController _controller;
+  late AnimationController _controller;
   late Animation<double> _widthAnimation;
   late Animation<double> _heightAnimation;
 
@@ -156,6 +206,12 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.repeat(reverse: true);
+  }
+
+  @override
+  dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override

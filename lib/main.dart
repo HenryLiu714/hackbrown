@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:math';
 
 void main() async {
   // Load env
@@ -302,6 +303,131 @@ Future<String?> _findPlace(String address) async {
             child: const Text("End"),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+class RecommendationScreen extends StatefulWidget {
+  const RecommendationScreen({Key? key}) : super(key: key);
+
+  @override
+  _RecommendationScreenState createState() => _RecommendationScreenState();
+}
+
+class _RecommendationScreenState extends State<RecommendationScreen> {
+  List<String> restaurantList = [];
+  String recommendedRestaurant = 'Press the button to get a recommendation';
+
+  Future<void> _getRecommendation() async {
+    try {
+      double latitude = 41.829528;
+      double longitude = -71.401000;
+
+      String? formattedAddress = await _reverseGeocode(latitude, longitude);
+      if (formattedAddress == null) {
+        setState(() {
+          recommendedRestaurant = "No address found.";
+        });
+        return;
+      }
+      print(formattedAddress);
+
+      String? placeName = await _findPlace(formattedAddress);
+      setState(() {
+        recommendedRestaurant = placeName ?? "No place found.";
+      });
+      
+      print(placeName);
+
+    } catch (e) {
+      print("Error fetching location: $e");
+      setState(() {
+        recommendedRestaurant = "Error fetching location: $e";
+      });
+    }
+  }
+
+  Future<String?> _reverseGeocode(double lat, double lng) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final response = await http.get(Uri.parse(
+    'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
+  ));
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['results'].isNotEmpty) {
+      return data['results'][0]['formatted_address'];
+    }
+  }
+  return null;
+}
+
+// Function to find place (Address -> Place Names)
+  Future<String?> _findPlace(String address) async {
+  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+
+  String passing_string = "Restaurants within 10 miles of  " + address;
+  final response = await http.post(
+    Uri.parse('https://places.googleapis.com/v1/places:searchText'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'X-Goog-FieldMask' : 'places.displayName,places.formattedAddress,places.priceLevel',
+      'X-Goog-Api-Key' : key,
+    },
+    body: jsonEncode(<String, String>{
+      'textQuery' : passing_string,
+    }),
+  );
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    if (data['places'] != null && data['places'].isNotEmpty) {
+      for (var place in data['places']) {
+        restaurantList.add(place['displayName']['text']);
+      }
+    }
+    else {
+      print("No places found.");
+    }
+  }
+
+  if (restaurantList.isNotEmpty) {
+      final randomIndex = Random().nextInt(restaurantList.length);
+      setState(() {
+        recommendedRestaurant = restaurantList[randomIndex];
+      });
+    } else {
+      setState(() {
+        recommendedRestaurant = 'No restaurants available.';
+      });
+    }
+  return null;
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Restaurant Recommendation'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              recommendedRestaurant,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _getRecommendation,
+              child: const Text('Recommend'),
+            ),
+          ],
+        ),
       ),
     );
   }

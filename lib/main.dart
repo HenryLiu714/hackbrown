@@ -5,46 +5,30 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'constants.dart';
 import 'dart:math';
+import 'dart:developer';
 
 void main() async {
-  // Load env
- //  await dotenv.load(fileName: "../.env");
-  // await dotenv.load(fileName: "../.env");
-
-  // Load mongodb
-  print("Connecting to mongodb");
-  // await UserDB.inst.init();
-  print("connected to mongodb");
-
   runApp(const MyApp());
 }
 
-class UserDB {
-  late mongo.DbCollection user_info;
+dynamic fetchUser(userId) async {
+  final String url = 'http://127.0.0.1:5000/items?user_id=$userId';
 
-  UserDB._();
-
-  static UserDB? _instance;
-  static UserDB get inst => _instance ??= UserDB._();
-
-  init () async {
-    final connection_url = dotenv.env['CONNECTION_STRING']!;
-
-    var db = await mongo.Db.create("mongodb+srv://henryliu714:z6HbUn0hlP5sQtUP@hackbrown.b8rd7.mongodb.net/?retryWrites=true&w=majority&appName=hackbrown&tls=true");
-    await db.open();
-
-    var status = db.serverStatus();
-    print(status);
-  
-    print("done");
-
-    user_info = db.collection('user_info');
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      print(json.decode(response.body)[0]);
+      return json.decode(response.body)[0];
+    } else {
+      throw Exception('Failed to load user');
+    }
+  } catch (e) {
+    print('Error: $e');
   }
 }
 
@@ -54,6 +38,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    fetchUser(1);
     return MaterialApp(
       title: 'henry and eggs',
       theme: ThemeData(
@@ -66,12 +51,6 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  // stuff
-  dynamic retrieveUser(userId) async {
-    var collection = UserDB.inst.user_info;
-    var users = await collection.find(mongo.where.eq("user_id", userId)).toList();
-    return users.first;
-  }
 }
 
 class HomeScreen extends StatefulWidget {

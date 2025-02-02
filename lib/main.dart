@@ -27,7 +27,7 @@ class CurrentUser {
     user = await fetchUser(user_id);
     friends = [];
 
-    for (var friendId in user['friends']) {
+    for (final friendId in user['friends']) {
       friends.add(await fetchUser(friendId));
     }
   }
@@ -205,7 +205,7 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
   }
 
   @override
-  dispose() {
+  void dispose() {
     _controller.dispose();
     super.dispose();
   }
@@ -285,13 +285,123 @@ class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
 
 }
 
-// Leaderboard!
-class Screen2 extends StatelessWidget {
+class Screen2 extends StatefulWidget{
   const Screen2({super.key});
+
+  @override
+  State<Screen2> createState() => _Screen2State();
+}
+// Leaderboard!
+class _Screen2State extends State<Screen2> with SingleTickerProviderStateMixin{
+  late dynamic user;
+  late List<dynamic> friends;
+  late AnimationController _controller;
+  late Animation<double> _widthAnimation;
+  late Animation<double> _heightAnimation;
+  late Animation<double> _fontAnimation;
+
+  List<Map<String, String>> leaderboard = [];
+
+  @override
+  void initState() {
+    super.initState();
+    user = CurrentUser.inst.user;
+    friends = CurrentUser.inst.friends;
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 2),
+      reverseDuration: Duration(seconds: 2),
+    );
+
+    _widthAnimation = Tween<double>(begin: 500, end: 500)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _heightAnimation = Tween<double>(begin: 100, end: 105)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _fontAnimation = Tween<double>(begin: 72, end: 72)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _controller.repeat(reverse: true);
+
+    void getLeaderboard() {
+      final List<Map<String, String>> lb = [];
+      lb.add({"name": user['name'], "score": user['total_restaurant_time'].toString()});
+
+      for (var friend in friends) {
+        lb.add({"name": friend['name'], "score": friend['total_restaurant_time'].toString()});
+      }
+
+      lb.sort((a, b) => a['score']!.compareTo(b['score']!));
+
+      for (var entry in lb.reversed.take(5)) {
+        leaderboard.add(entry);
+      }
+    }
+
+    getLeaderboard();    
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepOrange,
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return SizedBox(
+                        width: _widthAnimation.value,
+                        height: _heightAnimation.value,
+                        child: child,
+                      );
+                    },
+                  child: Text(
+              'LEADERBOARD',
+              style: TextStyle(
+                fontSize: _fontAnimation.value,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),),
+            SizedBox(height: 20),
+            ...leaderboard.map((entry) => ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 300),
+              child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          entry['name']!,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: (leaderboard.indexOf(entry) == 0 || entry['name'] == user['name']) ? ((entry['name'] == user['name']) ? const Color.fromARGB(255, 91, 127, 218) : const Color.fromARGB(255, 240, 76, 76)) : Colors.black,
+                          ),
+                        ),
+                        Text(
+                          entry['score']!,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: (leaderboard.indexOf(entry) == 0 || entry['name'] == user['name']) ? ((entry['name'] == user['name']) ? const Color.fromARGB(255, 91, 127, 218) : const Color.fromARGB(255, 240, 76, 76)) : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            ))
+          ],
+        ),
+      ),
     );
   }
 }
@@ -329,7 +439,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
   }
 
   @override
-  dispose() {
+  void dispose() {
     _controller.dispose();
     super.dispose();
   }

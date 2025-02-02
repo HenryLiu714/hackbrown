@@ -7,11 +7,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'constants.dart';
 import 'dart:math';
 
 void main() async {
   // Load env
  //  await dotenv.load(fileName: "../.env");
+  // await dotenv.load(fileName: "../.env");
 
   // Load mongodb
   print("Connecting to mongodb");
@@ -209,7 +212,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
 
 // Function to reverse geocode (LatLng -> Address)
 Future<String?> _reverseGeocode(double lat, double lng) async {
-  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final String key = GOOGLE_API_KEY ?? '';
   final response = await http.get(Uri.parse(
     'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$key'
   ));
@@ -225,7 +228,7 @@ Future<String?> _reverseGeocode(double lat, double lng) async {
 
 // Function to find place (Address -> Place Name)
 Future<String?> _findPlace(String address) async {
-  final String key = dotenv.env['GOOGLE_API_KEY'] ?? '';
+  final String key = GOOGLE_API_KEY ?? '';
 
   String passing_string = "Restaurant within 10 feet of  " + address;
   final response = await http.post(
@@ -276,9 +279,6 @@ Future<String?> _findPlace(String address) async {
 
   @override
   Widget build(BuildContext context) {
-    print("Building wid");
-
-
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

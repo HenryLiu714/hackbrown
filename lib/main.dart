@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:core';
 
 
 
@@ -43,8 +44,36 @@ dynamic fetchUser(userId) async {
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      print(json.decode(response.body)[0]);
-      return json.decode(response.body)[0];
+      Map<String, dynamic> user = json.decode(response.body)[0];
+
+      user['restaurant_times'] = {};
+
+      for (Map<String, dynamic> restaurant in user['restaurants']) {
+        final start  = DateTime.parse(restaurant['time_visited']);
+        final end = DateTime.parse(restaurant['time_left']);
+
+        final difference = end.difference(start).inSeconds;
+        
+        if (user['restaurant_times'].containsKey(restaurant['name'])) {
+          user['restaurant_times'][restaurant['name']] += difference;
+        } else {
+          user['restaurant_times'][restaurant['name']] = difference;
+        }
+      }
+
+      int totalRestaurantTime() {
+        var sum = 0;
+        for (var time in user['restaurant_times'].values) {
+          sum += time as int;
+        }
+
+        return sum;
+      }
+
+      user['total_restaurant_time'] = totalRestaurantTime();
+
+      return user;
+
     } else {
       throw Exception('Failed to load user');
     }
@@ -65,6 +94,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        fontFamily: 'Arcade'
       ),
       home: HomeScreen(),
     );
@@ -99,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen>{
   children: [
      Positioned.fill(
             child: Image.asset(
-              '../images/main_background.png', // Replace with your image asset
+              '../assets/main_background.png', // Replace with your image asset
               fit: BoxFit.cover,
             ),
           ),
@@ -135,20 +165,55 @@ class Screen1 extends StatefulWidget {
   State<Screen1> createState() => Screen1State(); 
 }
 
-class Screen1State extends State<Screen1> {
+class Screen1State extends State<Screen1> with SingleTickerProviderStateMixin {
   late dynamic user;
   late List<dynamic> friends;
+  late AnimationController _controller;
+  late Animation<double> _widthAnimation;
+  late Animation<double> _heightAnimation;
 
   @override
   void initState() {
     super.initState();
-    final user = CurrentUser.inst.user;
-    final friends = CurrentUser.inst.friends;
-    print(user['name']);
+    user = CurrentUser.inst.user;
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 2),
+      reverseDuration: Duration(seconds: 2),
+    );
+
+    _widthAnimation = Tween<double>(begin: 100, end: 110)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _heightAnimation = Tween<double>(begin: 100, end: 110)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _controller.repeat(reverse: true);
+  }
+
+  Map<String, dynamic> topRestaurant() {
+    var maxValue = -1;
+    var maxRest = "";
+    for (var restaurant in user['restaurant_times'].entries) {
+      if (restaurant.value > maxValue) {
+        maxValue = restaurant.value;
+        maxRest = restaurant.key;
+      }
+    }
+
+    return {"restaurant": maxRest, "time": maxValue};
+  }
+
+  @override
+  dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final top = topRestaurant();
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Center(
@@ -156,13 +221,66 @@ class Screen1State extends State<Screen1> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Welcome!',
-              style: const TextStyle(fontSize: 20),
-            )
-          ],
+              'Quest Complete',
+              style: TextStyle(
+                fontSize: 64,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) => ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 130, maxHeight: 130),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return SizedBox(
+                        width: _widthAnimation.value,
+                        height: _heightAnimation.value,
+                        child: child,
+                      );
+                    },
+                  child: Image.asset(
+                    '../assets/star.png',
+                    width: 100,
+                    height: 100,
+                  ),),
+                ),
+              )),
+            ),
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  child: Text(
+                    "Score: ${user['total_restaurant_time']}",
+                    style: TextStyle(
+                      fontSize: 54,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,)),
+                    Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 400),
+                    child: Text(
+                      "Favorite spot: ${top['restaurant']} \n Time spent: ${top['time'] ~/ 60} min",
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,),
+                  ))
+                ] 
+              ),
+            ]),
         ),
-      ),
-    );
+      );
   }
 
 }
@@ -237,7 +355,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
             MaterialPageRoute(builder: (context) => const StopwatchScreen()),
           );
         },
-        icon: Image.asset("../images/start.png"),
+        icon: Image.asset("../assets/start.png"),
         style: IconButton.styleFrom(
           fixedSize: Size(300, 150),
           padding: const EdgeInsets.all(0.0),
@@ -510,8 +628,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     print('Request failed with status: ${response.statusCode}.');
     return null;
   }
-  
-  return null;
   }
 
 
@@ -525,7 +641,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           // Display the GIF as the background
           Positioned.fill(
             child: Image.asset(
-              '../images/spinner.gif', // Replace with your GIF path
+              '../assets/spinner.gif', // Replace with your GIF path
               fit: BoxFit.cover,
             ),
           ),
@@ -559,13 +675,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 backgroundColor: WidgetStateProperty.all(Colors.pink),
                 padding: WidgetStateProperty.all(
                   EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-                textStyle: WidgetStateProperty.all(
-                  TextStyle(
-                    fontFamily: 'PressStart2P', // Replace with your game-style font
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
                 ),
                 side: WidgetStateProperty.all(
                   BorderSide(

@@ -12,11 +12,8 @@ import 'constants.dart';
 
 void main() async {
   // Load env
-<<<<<<< HEAD
  //  await dotenv.load(fileName: "../.env");
-=======
   // await dotenv.load(fileName: "../.env");
->>>>>>> master
 
   // Load mongodb
   print("Connecting to mongodb");
@@ -67,12 +64,6 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-<<<<<<< HEAD
-  // global
-
-
-=======
->>>>>>> master
   // stuff
   dynamic retrieveUser(userId) async {
     var collection = UserDB.inst.user_info;
@@ -287,11 +278,6 @@ Future<String?> _findPlace(String address) async {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    print("Building wid");
-
-=======
->>>>>>> master
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

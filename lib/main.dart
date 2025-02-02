@@ -10,7 +10,7 @@ import 'dart:convert';
 
 void main() async {
   // Load env
-  await dotenv.load(fileName: "../.env");
+ //  await dotenv.load(fileName: "../.env");
 
   // Load mongodb
   print("Connecting to mongodb");
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const StartScreen(),
+      home: HomeScreen(),
     );
   }
 }
@@ -69,6 +69,44 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
+class HomeScreen extends StatelessWidget {
+  final _controller = PageController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        scrollDirection: Axis.vertical,
+        controller: _controller,
+        children: [
+          StartScreen(),
+          Screen1(),
+          Screen2()
+        ],
+      ),
+    );
+  }
+}
+
+class Screen1 extends StatelessWidget {
+  const Screen1({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepPurple,
+    );
+  }
+}
+
+class Screen2 extends StatelessWidget {
+  const Screen2({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepOrange,
+    );
+  }
+}
 
 // Start Screen 
 class StartScreen extends StatelessWidget {
@@ -78,18 +116,26 @@ class StartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     
     return Scaffold(
-      appBar: AppBar(title: const Text("Start Stopwatch")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StopwatchScreen()),
-            );
-          },
-          child: const Text("Start"),
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("../images/main_background.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child:Center(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+              );
+            },
+            child: const Text("Start"),
+          ),
         ),
       ),
+      
     );
   }
 }
@@ -229,8 +275,8 @@ Future<String?> _findPlace(String address) async {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var user_name = appState.retrieveUser("user_id")["name"];
+    print("Building wid");
+
 
     return Scaffold(
       body: Column(
@@ -239,9 +285,6 @@ Future<String?> _findPlace(String address) async {
           const Text(
             "Score",
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "$user_name"
           ),
           const SizedBox(height: 20),
           Text(

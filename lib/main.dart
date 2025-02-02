@@ -119,18 +119,26 @@ class StartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     
     return Scaffold(
-      appBar: AppBar(title: const Text("Start Stopwatch")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StopwatchScreen()),
-            );
-          },
-          child: const Text("Start"),
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("../images/main_background.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child:Center(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+              );
+            },
+            child: const Text("Start"),
+          ),
         ),
       ),
+      
     );
   }
 }

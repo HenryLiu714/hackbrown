@@ -18,7 +18,7 @@ void main() async {
 
   // Load mongodb
   print("Connecting to mongodb");
-  // await UserDB.inst.init();
+  //await UserDB.inst.init();
   print("connected to mongodb");
 
   runApp(const MyApp());
@@ -33,9 +33,8 @@ class UserDB {
   static UserDB get inst => _instance ??= UserDB._();
 
   init () async {
-    final connection_url = dotenv.env['CONNECTION_STRING']!;
 
-    var db = await mongo.Db.create("mongodb+srv://henryliu714:z6HbUn0hlP5sQtUP@hackbrown.b8rd7.mongodb.net/?retryWrites=true&w=majority&appName=hackbrown&tls=true");
+    var db = await mongo.Db.create("mongodb+srv://henryliu714:z6HbUn0hlP5sQtUP@hackbrown.b8rd7.mongodb.net/?retryWrites=true&w=majority&appName=hackbrown&tls=true&ssl=true");
     await db.open();
 
     var status = db.serverStatus();
@@ -94,25 +93,34 @@ class _HomeScreenState extends State<HomeScreen>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _controller,
-        scrollDirection: Axis.horizontal,
-        children: [
-          RecommendationScreen(),
-          PageView(
-            controller: _controller2,
-            scrollDirection: Axis.vertical,
-            children: [
-              StartScreen(),
-              Screen1(),
-              Screen2(),
-            ],
+      body: Stack(
+  children: [
+     Positioned.fill(
+            child: Image.asset(
+              '../images/main_background.png', // Replace with your image asset
+              fit: BoxFit.cover,
+            ),
           ),
-        ],
-      ),
-      
-      
-      );
+    PageView(
+      controller: _controller,
+      scrollDirection: Axis.horizontal,
+      children: [
+        RecommendationScreen(),
+        PageView(
+          controller: _controller2,
+          scrollDirection: Axis.vertical,
+          children: [
+            StartScreen(),
+            Screen1(),
+            Screen2(),
+          ],
+        ),
+      ],
+    ),
+  ],
+      )
+);
+
   }
 }
 
@@ -143,29 +151,22 @@ class StartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("../images/main_background.png"),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child:Center(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const StopwatchScreen()),
-              );
-            },
-            child: const Text("Start"),
-          ),
+      backgroundColor: Colors.transparent, 
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const StopwatchScreen()),
+            );
+          },
+          child: const Text("Start"),
         ),
       ),
-      
     );
+    
+   
   }
 }
 // State for Start State
@@ -429,9 +430,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Restaurant Recommendation'),
-      ),
+      backgroundColor: Colors.transparent, 
+      
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
